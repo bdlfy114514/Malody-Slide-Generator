@@ -1,0 +1,66 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.chaquo.python'
+}
+
+android {
+    namespace 'com.slidegen.app'
+    compileSdk 34
+
+    // 算法核心放在**仓库根目录**的 src/main/python/，桌面版与安卓版共用同一份源码，
+    // 避免两端实现分叉。Chaquopy 通过 android.sourceSets.<name>.python 扩展源码目录。
+    // 默认目录 app/src/main/python 仍然保留，也可以继续放 Python 文件。
+    sourceSets {
+        main {
+            python.srcDirs += "${rootProject.projectDir}/../src/main/python"
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.slidegen.app"
+        minSdk 24
+        targetSdk 34
+        versionCode 3
+        versionName "1.2"
+
+        ndk {
+            // Python 3.12 (Chaquopy 17) 仅提供 64 位运行时：arm64-v8a（全部现代手机）+ x86_64（模拟器）
+            abiFilters "arm64-v8a", "x86_64"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    // Keep the WebView asset uncompressed-friendly is not required; defaults are fine.
+}
+
+chaquopy {
+    defaultConfig {
+        version = "3.12"
+        pip {
+            // 无额外 Python 依赖：本工具仅使用标准库
+        }
+    }
+}
+
+dependencies {
+}

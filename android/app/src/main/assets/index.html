@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Slide 生成器</title>
+<style>
+  :root{
+    --green:#43a047; --green-d:#2e7d32; --blue:#2196F3; --orange:#FF5722; --red:#E53935;
+    --bg:#f1f3f6; --card:#ffffff; --line:#e3e6ea; --text:#1f2328; --sub:#6b7280;
+    --soft:#fafbfc;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans SC","Microsoft YaHei",sans-serif;
+    -webkit-text-size-adjust:100%;}
+  .app{max-width:560px;margin:0 auto;padding:12px 12px 96px;}
+
+  h1{font-size:19px;margin:6px 0 12px;font-weight:700;letter-spacing:.5px;}
+  h1 small{font-weight:400;color:var(--sub);font-size:12px;margin-left:6px;}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .card h2{font-size:14px;margin:0 0 10px;font-weight:700;}
+  .sect-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .sect-head h2{margin:0;}
+  .mini{background:#eef1f4;color:#4b5563;font-size:12px;font-weight:600;
+    padding:5px 9px;border-radius:7px;border:none;}
+  .mini:active{filter:brightness(.95);}
+
+  label{font-size:13px;color:var(--sub);}
+  input[type=text], select{
+    width:100%;min-width:0;font-size:15px;padding:9px 10px;color:var(--text);
+    border:1px solid var(--line);border-radius:8px;background:var(--soft);
+    font-family:inherit;
+  }
+  input[type=text]:focus, select:focus{outline:none;border-color:var(--green);background:#fff;}
+  select{appearance:none;-webkit-appearance:none;background-image:none;padding-right:22px;}
+
+  /* 节点卡片 */
+  .node{border:1px solid var(--line);border-radius:10px;padding:10px 10px 8px;
+    margin-bottom:9px;background:#fff;}
+  .node-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .badge{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;
+    font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .node-title{font-size:13px;font-weight:700;}
+  .del{margin-left:auto;background:#f4f5f7;color:#8a8f98;border:none;
+    border-radius:7px;padding:4px 10px;font-size:12px;}
+  .del:active{background:#e9ebee;}
+  .fields{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:8px;align-items:center;}
+  .fields label{white-space:nowrap;}
+
+  .segrow{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;
+    border-top:1px dashed var(--line);}
+  .segrow .mark{font-size:12px;color:var(--sub);white-space:nowrap;flex:0 0 auto;}
+  .segrow select{flex:1 1 auto;font-size:13.5px;padding:7px 8px;}
+  .serr{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--sub);
+    flex:0 0 auto;white-space:nowrap;}
+  .serr input{width:18px;height:18px;accent-color:var(--green);margin:0;}
+
+  .addbtn{width:100%;margin-top:4px;border:1.5px dashed #cbd5dd;border-radius:10px;
+    background:#fbfcfd;color:var(--green-d);font-size:14px;font-weight:700;padding:11px;}
+  .addbtn:disabled{color:#b6bcc4;border-color:#e6e9ed;background:#fafbfc;}
+  .addbtn:active:not(:disabled){background:#f2f7f2;}
+
+  /* 参数行 */
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+  .row:last-child{margin-bottom:0;}
+  .row label{flex:0 0 76px;}
+
+  .hint{font-size:12px;color:var(--sub);line-height:1.55;margin:2px 0 8px;}
+
+  /* 预览 */
+  .preview{background:#212121;border-radius:12px;padding:10px;margin-bottom:12px;}
+  .preview .ptitle{color:#eee;font-size:13px;font-weight:700;margin:0 0 6px 2px;}
+  #canvas{display:block;width:100%;height:auto;background:#121212;border-radius:8px;}
+
+  /* 文件 */
+  #fileBtn{width:100%;}
+  .filename{font-size:13px;color:var(--sub);margin-top:8px;word-break:break-all;
+    padding:8px 10px;background:var(--soft);border:1px dashed var(--line);border-radius:8px;}
+  .filename.set{color:var(--text);border-style:solid;border-color:var(--green);}
+
+  /* 状态 */
+  #status{font-size:13px;line-height:1.5;padding:10px 12px;border-radius:9px;
+    margin-bottom:12px;display:none;word-break:break-word;white-space:pre-wrap;}
+  #status.ok{display:block;background:#e8f5e9;color:#1b5e20;border:1px solid #c8e6c9;}
+  #status.err{display:block;background:#fdecea;color:#b71c1c;border:1px solid #f5c6cb;}
+
+  button{font-family:inherit;}
+  .primary{border:none;border-radius:9px;font-size:16px;font-weight:700;padding:12px 16px;
+    color:#fff;background:var(--green);cursor:pointer;flex:1 1 auto;}
+  .primary:active{filter:brightness(.93);}
+
+  /* 底部固定操作栏 */
+  .actionbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;
+    max-width:560px;display:flex;align-items:center;gap:12px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+    background:rgba(255,255,255,.96);border-top:1px solid var(--line);
+    box-shadow:0 -2px 10px rgba(0,0,0,.05);z-index:5;}
+  .ab-info{font-size:13px;color:var(--sub);flex:0 0 auto;}
+  .ab-info b{color:var(--green-d);font-size:15px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Slide 生成器 <small>Malody Slide 插值工具</small></h1>
+
+  <!-- 谱面文件选择 -->
+  <div class="card">
+    <h2>谱面文件（.mc，选填）</h2>
+    <button id="fileBtn" class="primary" onclick="pickFile()">📁 选择谱面文件</button>
+    <div id="filename" class="filename">未选择文件（仅预览，不写入）</div>
+    <div class="hint">选填：留空则只在下方预览形状，不修改任何文件。写入前会自动生成 .bak 备份。</div>
+  </div>
+
+  <!-- 状态提示 -->
+  <div id="status"></div>
+
+  <!-- 预览 -->
+  <div class="preview">
+    <p class="ptitle">预览</p>
+    <canvas id="canvas" width="200" height="400"></canvas>
+  </div>
+
+  <!-- 节点与分段 -->
+  <div class="card">
+    <div class="sect-head">
+      <h2>节点与分段</h2>
+      <div>
+        <button type="button" class="mini" onclick="setAllSerrated(true)">全开锯齿</button>
+        <button type="button" class="mini" onclick="setAllSerrated(false)">全关锯齿</button>
+      </div>
+    </div>
+    <div class="hint">每个节点填「时间」与「位置」；每段可单独选择形状与是否加锯齿。节点 2–15 个。</div>
+    <div id="nodeList"></div>
+    <button type="button" id="addNode" class="addbtn" onclick="addNode()">＋ 添加节点</button>
+  </div>
+
+  <!-- 参数 -->
+  <div class="card">
+    <h2>其他参数</h2>
+    <div class="row"><label>节点密度</label><input type="text" id="density" value="8" /></div>
+    <div class="row"><label>宽度 w</label><input type="text" id="width" value="256" /></div>
+    <div class="row"><label>锯齿幅度</label><input type="text" id="amplitude" placeholder="整数，可正可负" /></div>
+    <div class="hint">锯齿幅度为所有锯齿段共用；只有开启锯齿时才需要填写。形状说明：直线 / 先快后慢 / 先慢后快 / S 形。</div>
+  </div>
+</div>
+
+<!-- 底部操作栏 -->
+<div class="actionbar">
+  <div class="ab-info">节点 <b id="nodeCount">2</b> / 15</div>
+  <button type="button" id="genBtn" class="primary" onclick="doGenerate()">生成 Slide</button>
+</div>
+
+<script>
+  const MAX_NODES = 15;
+  const MIN_NODES = 2;
+  const SHAPES = [['s','直线'], ['si','先快后慢'], ['so','先慢后快'], ['b','S 形']];
+
+  // 编辑状态：nodes[i] 与 segs[i]（segs[i] 描述节点 i → i+1 这一段）
+  const state = {
+    nodes: [ {t:'', x:''}, {t:'', x:''} ],
+    segs:  [ {shape:'s', serrated:false} ]
+  };
+
+  function $(id){ return document.getElementById(id); }
+
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function setStatus(msg, kind){
+    const el = $('status');
+    el.className = kind || '';
+    el.textContent = msg || '';
+    el.style.display = kind ? 'block' : 'none';
+  }
+
+  // ---------- 文件选择回调（由 Kotlin 调用） ----------
+  window.onFilePicked = function(name, uri){
+    const el = $('filename');
+    el.textContent = '已选择：' + name;
+    el.classList.add('set');
+    setStatus('已选择文件：' + name, 'ok');
+  };
+  window.onPickCancelled = function(){ /* 用户取消选择：保持原状态 */ };
+
+  function pickFile(){
+    try { Android.pickFile(); }
+    catch(e){ setStatus('无法打开文件管理器：' + e, 'err'); }
+  }
+
+  // ---------- 节点列表渲染 ----------
+  function render(){
+    const wrap = $('nodeList');
+    const n = state.nodes.length;
+    let html = '';
+    for(let i=0;i<n;i++){
+      const nd = state.nodes[i];
+      let segHtml = '';
+      if(i < n-1){
+        const sg = state.segs[i] || {shape:'s', serrated:false};
+        const opts = SHAPES.map(function(o){
+          return '<option value="'+o[0]+'"'+(sg.shape===o[0]?' selected':'')+'>'+o[1]+'</option>';
+        }).join('');
+        segHtml =
+          '<div class="segrow">'+
+            '<span class="mark">↳ 到节点'+(i+2)+'</span>'+
+            '<select data-i="'+i+'" data-f="shape">'+opts+'</select>'+
+            '<label class="serr"><input type="checkbox" data-i="'+i+'" data-f="serrated"'+
+              (sg.serrated?' checked':'')+'>锯齿</label>'+
+          '</div>';
+      }
+      html +=
+        '<div class="node">'+
+          '<div class="node-head">'+
+            '<span class="badge">'+(i+1)+'</span>'+
+            '<span class="node-title">节点 '+(i+1)+'</span>'+
+            (n>MIN_NODES ? '<button type="button" class="del" data-del="'+i+'">删除</button>' : '')+
+          '</div>'+
+          '<div class="fields">'+
+            '<label>时间</label>'+
+            '<input type="text" data-i="'+i+'" data-f="t" value="'+esc(nd.t)+'" placeholder="[4,1,4]">'+
+            '<label>位置</label>'+
+            '<input type="text" data-i="'+i+'" data-f="x" value="'+esc(nd.x)+'" placeholder="0-256">'+
+          '</div>'+
+          segHtml+
+        '</div>';
+    }
+    wrap.innerHTML = html;
+    $('nodeCount').textContent = n;
+    $('addNode').disabled = (n >= MAX_NODES);
+    $('addNode').textContent = (n >= MAX_NODES) ? '已达上限 15 个节点' : '＋ 添加节点';
+  }
+
+  function addNode(){
+    if(state.nodes.length >= MAX_NODES) return;
+    state.nodes.push({t:'', x:''});
+    state.segs.push({shape:'s', serrated:false});
+    render();
+  }
+
+  function removeNode(k){
+    const n = state.nodes.length;
+    if(n <= MIN_NODES) return;
+    state.nodes.splice(k,1);
+    if(k < n-1) state.segs.splice(k,1);     // 删除该节点出发的那一段
+    else        state.segs.splice(k-1,1);   // 删除最后一个节点：移除进入它的那一段
+    render();
+  }
+
+  function setAllSerrated(v){
+    // 仅对「已存在」的段生效（尾部尚未填写的节点不建段）
+    for(let i=0;i<state.segs.length;i++) state.segs[i].serrated = v;
+    render();
+  }
+
+  // ---------- 收集与校验 ----------
+  function parseTime(str){
+    let v;
+    try { v = JSON.parse(str); }
+    catch(e){ throw new Error('时间格式应为 [a,b,c]：' + str); }
+    if(!Array.isArray(v) || v.length !== 3) throw new Error('时间格式应为 [a,b,c]：' + str);
+    const a = parseInt(v[0]), b = parseInt(v[1]), c = parseInt(v[2]);
+    if([a,b,c].some(function(x){ return isNaN(x); })) throw new Error('时间必须是三个整数：' + str);
+    return [a,b,c];
+  }
+
+  function intField(id, name){
+    const s = $(id).value.trim();
+    if(s === '') throw new Error('请填写' + name + '。');
+    if(!/^-?\d+$/.test(s)) throw new Error(name + '必须是整数。');
+    return parseInt(s);
+  }
+
+  function collect(){
+    // 复制状态，并裁掉尾部完全为空的多余节点
+    const nodes = state.nodes.map(function(o){ return {t:o.t.trim(), x:o.x.trim()}; });
+    const segs  = state.segs.map(function(o){ return {shape:o.shape, serrated:!!o.serrated}; });
+    while(nodes.length > MIN_NODES && !nodes[nodes.length-1].t && !nodes[nodes.length-1].x){
+      nodes.pop(); segs.pop();
+    }
+
+    const outNodes = [];
+    for(let i=0;i<nodes.length;i++){
+      const nd = nodes[i];
+      if(!nd.t && !nd.x) throw new Error('节点 ' + (i+1) + ' 未填写（请填写或删除该节点）。');
+      if(!nd.t) throw new Error('节点 ' + (i+1) + ' 缺少时间。');
+      if(!nd.x) throw new Error('节点 ' + (i+1) + ' 缺少位置。');
+      if(!/^-?\d+$/.test(nd.x)) throw new Error('节点 ' + (i+1) + ' 的位置必须是整数。');
+      outNodes.push({ t: parseTime(nd.t), x: parseInt(nd.x) });
+    }
+    if(outNodes.length < MIN_NODES) throw new Error('请至少填写两个节点。');
+
+    const outSegs = segs.slice(0, outNodes.length - 1);
+
+    const density = intField('density', '节点密度');
+    const w = intField('width', '宽度');
+    if(density <= 0) throw new Error('节点密度必须是正整数。');
+
+    const payload = { w: w, density: density, nodes: outNodes, segs: outSegs };
+    if(outSegs.some(function(s){ return s.serrated; })){
+      const amp = $('amplitude').value.trim();
+      if(amp === '') throw new Error('有分段开启了锯齿，请填写锯齿幅度。');
+      if(!/^-?\d+$/.test(amp)) throw new Error('锯齿幅度必须是整数（可正可负可为 0）。');
+      payload.amplitude = amp;
+    }
+    return payload;
+  }
+
+  // ---------- 预览绘制（坐标变换与桌面版一致） ----------
+  function drawPreview(points){
+    const c = $('canvas');
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.fillStyle = '#121212';
+    ctx.fillRect(0,0,c.width,c.height);
+
+    ctx.strokeStyle = '#333333';
+    ctx.setLineDash([4,4]);
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(20,0); ctx.lineTo(20,410); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(180,0); ctx.lineTo(180,410); ctx.stroke();
+    ctx.setLineDash([]);
+
+    if(!points || points.length === 0) return;
+
+    let minT = Infinity, maxT = -Infinity;
+    for(const p of points){ if(p[1]<minT)minT=p[1]; if(p[1]>maxT)maxT=p[1]; }
+    const range = (maxT !== minT) ? (maxT - minT) : 1;
+    const cw = 200, ch = 400;
+    function tf(x,t){
+      return [ 20 + (x/256.0)*(cw-40), 370 - ((t-minT)/range)*(ch-60) ];
+    }
+
+    ctx.strokeStyle = '#FF5722';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for(let i=0;i<points.length;i++){
+      const p = tf(points[i][0], points[i][1]);
+      if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]);
+    }
+    ctx.stroke();
+
+    // 首尾节点方块
+    [points[0], points[points.length-1]].forEach(function(q){
+      const p = tf(q[0], q[1]);
+      ctx.fillStyle = '#4CAF50';
+      ctx.fillRect(p[0]-4, p[1]-4, 8, 8);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(p[0]-4, p[1]-4, 8, 8);
+    });
+  }
+
+  // ---------- 生成 ----------
+  function doGenerate(){
+    setStatus('');
+    let payload;
+    try { payload = collect(); }
+    catch(e){ setStatus(e.message, 'err'); return; }
+
+    let res;
+    try { res = JSON.parse(Android.generate(JSON.stringify(payload))); }
+    catch(e){ setStatus('内部错误：' + e, 'err'); return; }
+
+    if(!res.ok){ setStatus('错误：' + res.error, 'err'); return; }
+
+    drawPreview(res.points);
+
+    if(Android.hasFile()){
+      let wres;
+      try { wres = JSON.parse(Android.writeBack(res.slide)); }
+      catch(e){ setStatus('写入时发生错误：' + e, 'err'); return; }
+      if(wres.ok){
+        let msg = '已成功写入谱面！';
+        if(wres.bak) msg += '\n备份文件：' + wres.bak;
+        if(wres.warn) msg += '\n提示：' + wres.warn;
+        setStatus(msg, 'ok');
+      } else {
+        setStatus('写入失败：' + wres.error, 'err');
+      }
+    } else {
+      setStatus('预览刷新成功！（未选择文件，未写入）', 'ok');
+    }
+  }
+
+  // ---------- 事件委托 ----------
+  $('nodeList').addEventListener('input', function(ev){
+    const t = ev.target, f = t.dataset.f, i = parseInt(t.dataset.i);
+    if(f === 't' || f === 'x') state.nodes[i][f] = t.value;
+  });
+  $('nodeList').addEventListener('change', function(ev){
+    const t = ev.target, f = t.dataset.f, i = parseInt(t.dataset.i);
+    if(f === 'shape') state.segs[i].shape = t.value;
+    else if(f === 'serrated') state.segs[i].serrated = t.checked;
+  });
+  $('nodeList').addEventListener('click', function(ev){
+    const d = ev.target.closest('[data-del]');
+    if(d) removeNode(parseInt(d.dataset.del));
+  });
+
+  // 初始化
+  render();
+  drawPreview(null);
+</script>
+</body>
+</html>

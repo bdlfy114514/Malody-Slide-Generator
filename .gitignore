@@ -1,0 +1,40 @@
+# ===== 本机工具链（约 6.6 GB，绝不入库）=====
+.toolchain/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ===== 安卓构建产物 =====
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ===== 安卓本机配置（含各人电脑的绝对路径，不能入库）=====
+android/local.properties
+android/gradle.properties
+android/.idea/
+android/*.iml
+local.properties
+
+# ===== 编辑器 / 系统 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== 临时 / 测试产物 =====
+*.log
+*.bak
+*.bak.[0-9]*

@@ -1,0 +1,18 @@
+# 统一行尾，避免 Windows / macOS / Linux 协作时产生全是换行的假 diff。
+# 仓库内一律存 LF；检出到工作区时由各人 Git 自行决定（不强制转换）。
+* text=auto eol=lf
+
+# 二进制文件，绝不当作文本处理
+*.apk   binary
+*.aab   binary
+*.jar   binary
+*.png   binary
+*.jpg   binary
+*.pdf   binary
+*.zip   binary
+*.imy   binary
+*.dex   binary
+*.so    binary
+
+# Windows 批处理最好保持 CRLF，双击运行更稳
+*.bat   text eol=crlf

@@ -1,0 +1,22 @@
+# Android 工程本机配置模板
+#
+# 用法：把本文件复制为同目录下的 gradle.properties，然后按需修改。
+#   copy gradle.properties.example gradle.properties
+#
+# gradle.properties 已加入 .gitignore，因为它含各人电脑的绝对路径。
+
+# 【可选】指定 Gradle 使用的 JDK。只有当你电脑上默认的 java 不是 JDK 17 时才需要取消注释。
+# 路径要用双反斜杠转义（Windows），例如：
+#   Windows:      org.gradle.java.home=D:\\Program Files\\Java\\jdk-17
+#   macOS/Linux:  org.gradle.java.home=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
+#
+# 注意：Gradle 8.7 **不支持**在这里写 ${env.JAVA_HOME} 这类环境变量占位符（8.13 才支持），
+#       所以这里必须写死绝对路径，或者干脆不写、由 JAVA_HOME / PATH 决定。
+
+# 构建内存与编码（一般不用改）
+org.gradle.jvmargs=-Xmx2560m -Dfile.encoding=UTF-8
+org.gradle.parallel=true
+
+# AndroidX（必须开启）
+android.useAndroidX=true
+android.nonTransitiveRClass=true
